@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:18.04
 
 # Add scripts to make it run
 ADD convert_to_1000g_ids.pl /
