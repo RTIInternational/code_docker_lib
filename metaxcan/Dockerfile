@@ -8,7 +8,9 @@ FROM ubuntu:18.04
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Need this to add R repo
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/apt/sources.list
 
 # Add R apt repository
 RUN apt-get update && apt-get install -y gnupg2
@@ -46,9 +48,7 @@ RUN R -e 'install.packages(c("ggplot2", "dplyr"), repos="http://cran.us.r-projec
 # =====================================================================
 # Install basic stuff to be able to install Miniconda
 RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/apt/sources.list
-RUN apt-get update && apt-get install -y git \
-    wget \
-    bzip2 \
+RUN apt-get update && apt-get install -y bzip2 \
     ca-certificates \
     libglib2.0-0 \
     libxext6 \
