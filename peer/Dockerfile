@@ -80,12 +80,9 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
-
-ENV PATH=pkg-config:$PATH
-
 #### Build code for installing PEER ####    
 
-# Install dependencies and both Python and R PEER packages
+# Install dependencies and Python PEER package
 RUN apt-get update \
     && apt-get install -y \
         gcc-5 \
@@ -98,18 +95,28 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 50 --slave /usr/bin/g++ g++ /usr/bin/g++-5 \
     && wget https://github.com/downloads/PMBio/peer/peer_source_1.3.tar.gz \
-    && wget https://github.com/downloads/PMBio/peer/R_peer_source_1.3.tgz \
     && tar -xvf peer_source_1.3.tar.gz \
-    && cd peer/build/ \
-    && cmake ./.. \
+    && cd /peer/build/ \
+    && cmake /peer \
     && make \
     && make install \
-    && cd / \
+    && rm -rf /peer /peer_source_1.3.tar.gz
+
+# Install dependencies and R PEER package
+WORKDIR /
+
+RUN Rscript -e 'install.packages(c("argparser"), repos = "http://cran.us.r-project.org")' \
+    && wget https://github.com/downloads/PMBio/peer/R_peer_source_1.3.tgz \
     && R CMD INSTALL R_peer_source_1.3.tgz \
-    && rm -rf peer peer_source_1.3.tar.gz R_peer_source_1.3.tgz
+    && rm R_peer_source_1.3.tgz
+
+# Add wrapper script
+COPY run_peer.R /src/
 
 ENV PATH=pkg-config:$PATH
 
 WORKDIR /
-    
-CMD /bin/bash
+
+ENTRYPOINT ["Rscript", "/src/run_peer.R"]
+
+CMD ["--help"]
