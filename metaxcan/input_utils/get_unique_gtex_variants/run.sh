@@ -8,4 +8,4 @@ finish() {
 }
 trap finish EXIT
 
-perl /opt/code_docker_lib/extract_rows.pl "$@"
+/bin/bash /opt/code_docker_lib/get_unique_gtex_variants.sh "$@"
