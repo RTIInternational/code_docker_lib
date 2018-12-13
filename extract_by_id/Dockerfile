@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
 # Add scripts to make it run
-ADD extract_rows.pl /
+ADD extract_by_id.pl /
 ADD run.sh /
 
 # Add to /opt folder

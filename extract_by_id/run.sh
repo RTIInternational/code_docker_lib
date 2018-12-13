@@ -8,4 +8,4 @@ finish() {
 }
 trap finish EXIT
 
-perl /opt/code_docker_lib/extract_rows.pl "$@"
+perl /opt/code_docker_lib/extract_by_id.pl "$@"
