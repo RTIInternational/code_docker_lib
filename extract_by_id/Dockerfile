@@ -11,7 +11,7 @@ RUN mv run.sh /opt/code_docker_lib
 
 # Change permissions to make things exectuable
 RUN chmod u+x /opt/code_docker_lib/run.sh
-RUN chmod u+x /opt/code_docker_lib/extract_rows.pl
+RUN chmod u+x /opt/code_docker_lib/extract_by_id.pl
 
 # Set wrkdir
 RUN mkdir /data
