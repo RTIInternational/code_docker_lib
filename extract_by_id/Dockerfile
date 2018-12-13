@@ -6,7 +6,7 @@ ADD run.sh /
 
 # Add to /opt folder
 RUN mkdir /opt/code_docker_lib
-RUN mv extract_rows.pl /opt/code_docker_lib
+RUN mv extract_by_id.pl /opt/code_docker_lib
 RUN mv run.sh /opt/code_docker_lib
 
 # Change permissions to make things exectuable
