@@ -18,19 +18,19 @@ WriteTable <- function(data, filename, index.name) {
 p <- arg_parser("Run PEER using the R interface. Probabilistic Estimation of Expression Residuals (PEER) is a method designed to estimate surrogate variables/latent factors/hidden factors that contribute to gene expression variability, but it can be applied to other data types as well. For more information, please refer to https://doi.org/10.1038/nprot.2011.457.",
     name = "Probabilistic Estimation of Expression Residuals (PEER)")
 p <- add_argument(p, arg = "omic_data_file", 
-    help = "A tab delimited file containing N+1 rows and G+1 columns, where N is the number of samples, and G is the number of features (genes, methylation sites, chromatin accessibility windows, etc.). The first row and column must contain sample IDs and feature IDs respectively. Feature values should be normalized across samples and variance stabilized.")
+    help = "A tab delimited file containing N + 1 rows and G + 1 columns, where N is the number of samples, and G is the number of features (genes, methylation sites, chromatin accessibility windows, etc.). The first row and column must contain sample IDs and feature IDs respectively. Feature values should be normalized across samples and variance stabilized.")
 p <- add_argument(p, arg = "output_prefix", 
     help = "File name prefix for output files. To specify an output directory as well, use --output_dir.")
 p <- add_argument(p, arg = "num_factors", type = "numeric",
     help = "Number of hidden factors to estimate.")
-p <- add_argument(p, arg = "--covariates", help = "A tab delimited file containing a matrix of size N × C, where C is the number of known covariates to be included in association test regression models of downstream analyses. Examples of common covariates include sex, age, batch variables, and quality metrics. Categorical variables (e.g., batch number) have to be encoded as indicator variables, with a different binary variable for each category. For the indicator variables, a value of 1 signifies membership in the category and a value of 0 indicates otherwise.")
-p <- add_argument(p, arg = "--alphaprior_a", default = 0.001,
+p <- add_argument(p, arg = "--cov_file", help = "A tab delimited file containing a matrix of size M + 1 × C + 1, where M >= N and is the number of samples for which covariate data is provided. The set of samples used in the hidden factor estimation procedure will be the intersection of sampless in the covariate matrix and omic data matrix. C is the number of known covariates to be included in association test regression models of downstream analyses. Examples of common covariates include sex, age, batch variables, and quality metrics. Categorical variables (e.g., batch number) have to be encoded as indicator variables, with a different binary variable for each category. For the indicator variables, a value of 1 signifies membership in the category and a value of 0 indicates otherwise. The first row and column must contain sample IDs and covariate IDs respectively.")
+p <- add_argument(p, arg = "--alphaprior_a", type = "numeric", default = 0.001,
     help = "Shape parameter of the gamma distribution prior of the model noise distribution.")
-p <- add_argument(p, arg = "--alphaprior_b", default = 0.01,
+p <- add_argument(p, arg = "--alphaprior_b", type = "numeric", default = 0.01,
     help = "Scale parameter of the gamma distribution prior of the model noise distribution.")
-p <- add_argument(p, arg = "--epsprior_a", help = "", default = 0.1,
+p <- add_argument(p, arg = "--epsprior_a", type = "numeric", help = "", default = 0.1,
     help = "Shape parameter of the gamma distribution prior of the model weight distribution.")
-p <- add_argument(p, arg = "--epsprior_b", help = "", default = 10,
+p <- add_argument(p, arg = "--epsprior_b", type = "numeric", help = "", default = 10,
     help = "Scale parameter of the gamma distribution prior of the model weight distribution.")
 p <- add_argument(p, arg = "--tol", type = "numeric", default = 0.001,
     help = "Threshold for the increase in model evidence when optimizing hidden factor values. Estimation completes for a hidden factor when the increase in model evidence exceeds this value.")
@@ -54,8 +54,12 @@ if(argv$version){
 if(is.na(argv$omic_data_file)){ 
     stop(paste0("Error: Please provide an 'omic_data_file'. Use --help for more details.")) 
 }
-if(! file.exists(argv$omic_data_file)){ 
+if(!file.exists(argv$omic_data_file)){ 
     stop(paste0("Error: ", argv$omic_data_file, 
+        " not found. Check your file path and name.")) 
+}
+if(!is.na(argv$cov_file) && !file.exists(argv$cov_file)){ 
+    stop(paste0("Error: ", argv$cov_file, 
         " not found. Check your file path and name.")) 
 }
 if(is.na(argv$output_prefix)){ 
@@ -102,6 +106,29 @@ cat("Done.\n")
 cat(paste0("Loaded data matrix with ", n.samples, " rows and ", 
     n.features, " columns.\n"))
 
+# Load covariate data
+cov.data <- NULL
+if(!is.na(argv$cov_file)){
+    cat(paste0("Loading covariate data from ", argv$cov_file, " ..."))
+    cov.data <- read.table(argv$cov_file, sep = "\t", header = T, as.is = T, 
+        check.names = F, comment.char = "", row.names = 1)
+    cov.data <- as.matrix(cov.data)
+    n.vars <- ncols(cov.data)
+    cat("Done.\n")
+    cat(paste0("Loaded ", n.vars, " covariates.\n"))
+    # Subset and match rows between covariate and omic data matrix
+    cov.subset <- cov.data[rownames(cov.data) %in% rownames(omic.data),]
+    omic.subset <- omic.data[rownames(omic.data) %in% rownames(cov.subset),]
+    match.order <- match(rownames(cov.subset, table = rownames(omic.subset)))
+    cov.subset <- cov.subset[match.order,]
+    if(nrow(omic.subset) < nrow(omic.data)){
+        cat(paste0("Data reduced to ", nrow(omic.subset), 
+        " samples after matching with covariate data.\n"))
+    }
+    omic.data <- omic.subset
+    cov.data <- cov.subset
+}
+
 # Set method parameters
 cat(paste0("Setting initialization parameters ..."))
 model <- PEER()
@@ -112,11 +139,8 @@ invisible(PEER_setPriorEps(model, argv$epsprior_a, argv$epsprior_b))
 invisible(PEER_setTolerance(model, argv$tol))
 invisible(PEER_setVarTolerance(model, argv$var_tol))
 invisible(PEER_setNmax_iterations(model, argv$max_iter))
-if (!is.null(argv$covariates) && !is.na(argv$covariates)) {
-    covar.df <- read.table(argv$covariates, sep = "\t", header = T, row.names = 1, as.is = T)
-    covar.df <- sapply(covar.df, as.numeric)
-    cat(paste0("  * including ", dim(covar.df)[2], " covariates", "\n"))
-    invisible(PEER_setCovariates(model, as.matrix(covar.df)))  # samples x covariates
+if(!is.null(cov.data)){
+    invisible(PEER_setCovariates(model, cov.data))
 }
 cat("Done.\n")
 
