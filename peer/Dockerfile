@@ -105,18 +105,18 @@ RUN apt-get update \
 # Install dependencies and R PEER package
 WORKDIR /
 
-RUN Rscript -e 'install.packages(c("argparser"), repos = "http://cran.us.r-project.org")' \
+RUN Rscript -e 'install.packages(c("optparse"), repos = "http://cran.us.r-project.org")' \
     && wget https://github.com/downloads/PMBio/peer/R_peer_source_1.3.tgz \
     && R CMD INSTALL R_peer_source_1.3.tgz \
     && rm R_peer_source_1.3.tgz
 
 # Add wrapper script
-COPY run_peer.R /src/
+COPY run_peer.R /opt/
 
 ENV PATH=pkg-config:$PATH
 
 WORKDIR /
 
-ENTRYPOINT ["Rscript", "/src/run_peer.R"]
+ENTRYPOINT ["Rscript", "/opt/run_peer.R"]
 
 CMD ["--help"]
