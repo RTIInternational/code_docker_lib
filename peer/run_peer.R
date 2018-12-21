@@ -3,7 +3,7 @@
 # Modified by: Bryan Quach <bquach@rti.org>
 
 library(peer, quietly = T)
-library(argparser, quietly = T)
+library(optparse, quietly = T)
 peer.version <- 1.3 #software version
 
 WriteTable <- function(data, filename, index.name) {
@@ -15,32 +15,33 @@ WriteTable <- function(data, filename, index.name) {
 }
 
 # Generate usage doc and retrieve command line args
-p <- arg_parser("Run PEER using the R interface. Probabilistic Estimation of Expression Residuals (PEER) is a method designed to estimate surrogate variables/latent factors/hidden factors that contribute to gene expression variability, but it can be applied to other data types as well. For more information, please refer to https://doi.org/10.1038/nprot.2011.457.",
-    name = "Probabilistic Estimation of Expression Residuals (PEER)")
-p <- add_argument(p, arg = "omic_data_file", 
-    help = "A tab delimited file containing N+1 rows and G+1 columns, where N is the number of samples, and G is the number of features (genes, methylation sites, chromatin accessibility windows, etc.). The first row and column must contain sample IDs and feature IDs respectively. Feature values should be normalized across samples and variance stabilized.")
-p <- add_argument(p, arg = "output_prefix", 
-    help = "File name prefix for output files. To specify an output directory as well, use --output_dir.")
-p <- add_argument(p, arg = "num_factors", type = "numeric",
-    help = "Number of hidden factors to estimate.")
-p <- add_argument(p, arg = "--covariates", help = "A tab delimited file containing a matrix of size N × C, where C is the number of known covariates to be included in association test regression models of downstream analyses. Examples of common covariates include sex, age, batch variables, and quality metrics. Categorical variables (e.g., batch number) have to be encoded as indicator variables, with a different binary variable for each category. For the indicator variables, a value of 1 signifies membership in the category and a value of 0 indicates otherwise.")
-p <- add_argument(p, arg = "--alphaprior_a", default = 0.001,
-    help = "Shape parameter of the gamma distribution prior of the model noise distribution.")
-p <- add_argument(p, arg = "--alphaprior_b", default = 0.01,
-    help = "Scale parameter of the gamma distribution prior of the model noise distribution.")
-p <- add_argument(p, arg = "--epsprior_a", help = "", default = 0.1,
-    help = "Shape parameter of the gamma distribution prior of the model weight distribution.")
-p <- add_argument(p, arg = "--epsprior_b", help = "", default = 10,
-    help = "Scale parameter of the gamma distribution prior of the model weight distribution.")
-p <- add_argument(p, arg = "--tol", type = "numeric", default = 0.001,
-    help = "Threshold for the increase in model evidence when optimizing hidden factor values. Estimation completes for a hidden factor when the increase in model evidence exceeds this value.")
-p <- add_argument(p, arg = "--var_tol", type = "numeric", default = 0.00001,
-    help = "Threshold for the variance of model residuals when optimizing hidden factor values. Estimation completes for a hidden factor when the variance of residuals is smaller than this value.")
-p <- add_argument(p, arg = "--max_iter", type = "numeric", default = 1000,
-    help = "Max number of iterations for updating values of each hidden factor.")
-p <- add_argument(p, arg = "--output_dir", short = "-o", default = ".",
-    help = "Directory in which to save outputs.")
-p <- add_argument(p, arg = "--version", short = "-v", flag = T, 
+p <- OptionParser(usage = "\n%prog [options] --omic_data file <omic_data_file> --output_prefix <output_prefix> --num_factors <num_factors>",
+    description = "\nProbabilistic Estimation of Expression Residuals (PEER)\n\nRun PEER using the R interface. PEER is a method designed to estimate surrogate variables/latent factors/hidden factors that contribute to gene expression variability, but it can be applied to other data types as well. For more information, please refer to https://doi.org/10.1038/nprot.2011.457.",
+    prog = "Rscript run_peer.R")
+p <- add_option(object = p, opt_str = c("--omic_data_file"), default = NULL, type = "character",
+    help = "[REQUIRED] A tab delimited file with .tab file extension containing N + 1 rows and G + 1 columns, where N is the number of samples, and G is the number of features (genes, methylation sites, chromatin accessibility windows, etc.). The first row and column must contain sample IDs and feature IDs respectively. Feature values should be normalized across samples and variance stabilized.")
+p <- add_option(object = p, opt_str = c("--output_prefix"), default = NULL, type = "character",
+    help = "[REQUIRED] File name prefix for output files. To specify an output directory as well, use --output_dir.")
+p <- add_option(object = p, opt_str = c("--num_factors"), type = "integer", default = NULL,
+    help = "[REQUIRED] Number of hidden factors to estimate. PEER uses automatic relevance determination to choose a suitable effective number of factors, so this parameter needs only to be set to a sufficiently large value. Without prior information available, a general recommendation is to use 25% of the number of samples but no more than 100 factors.")
+p <- add_option(object = p, opt_str = c("--cov_file"), help = "A tab delimited file with a .tab file extension containing a matrix of size M + 1 × C + 1, where M >= N and is the number of samples for which covariate data is provided. If this file is input, the set of samples used in the hidden factor estimation procedure will be the intersection of samples in the covariate matrix and omic data matrix. C is the number of known covariates to be included in association test regression models of downstream analyses. Examples of common covariates include sex, age, batch variables, and quality metrics. Categorical variables (e.g., batch number) have to be encoded as D - 1 indicator/binary variables, where D is the number of categories for a given categorical variable. For the indicator variables, a value of 1 signifies membership in the category and a value of 0 indicates otherwise. The first row and column must contain sample IDs and covariate IDs respectively [default=%default].")
+p <- add_option(object = p, opt_str = c("--alphaprior_a"), type = "double", default = 0.001,
+    help = "Shape parameter of the gamma distribution prior of the model noise distribution [default=%default].")
+p <- add_option(object = p, opt_str = c("--alphaprior_b"), type = "double", default = 0.01,
+    help = "Scale parameter of the gamma distribution prior of the model noise distribution. [default=%default]")
+p <- add_option(object = p, opt_str = c("--epsprior_a"), type = "double", default = 0.1,
+    help = "Shape parameter of the gamma distribution prior of the model weight distribution. [default=%default]")
+p <- add_option(object = p, opt_str = c("--epsprior_b"), type = "double", default = 10,
+    help = "Scale parameter of the gamma distribution prior of the model weight distribution. [default=%default]")
+p <- add_option(object = p, opt_str = c("--tol"), type = "double", default = 0.001,
+    help = "Threshold for the increase in model evidence when optimizing hidden factor values. Estimation completes for a hidden factor when the increase in model evidence exceeds this value [default=%default].")
+p <- add_option(object = p, opt_str = c("--var_tol"), type = "double", default = 0.00001,
+    help = "Threshold for the variance of model residuals when optimizing hidden factor values. Estimation completes for a hidden factor when the variance of residuals is smaller than this value [default=%default].")
+p <- add_option(object = p, opt_str = c("--max_iter"), type = "double", default = 1000,
+    help = "Max number of iterations for updating values of each hidden factor [default=%default].")
+p <- add_option(object = p, opt_str = c("--output_dir", "-o"), default = ".",
+    help = "Directory in which to save outputs [default=%default].")
+p <- add_option(object = p, opt_str = c("--version", "-v"), action = "store_true", default = F, 
     help = "Print PEER version number.")
 argv <- parse_args(p)
 
@@ -50,16 +51,33 @@ if(argv$version){
     quit(save = "no")
 }
 
-# Check validity of argument inputs
-if(is.na(argv$omic_data_file)){ 
-    stop(paste0("Error: Please provide an 'omic_data_file'. Use --help for more details.")) 
+# Check if positional arguments were given 
+if(is.null(argv$omic_data_file)){
+    stop("Error: Please provide a value for --omic_data_file")
 }
-if(! file.exists(argv$omic_data_file)){ 
+if(is.null(argv$output_prefix)){
+    stop("Error: Please provide a value for --output_prefix")
+}
+if(is.null(argv$num_factors)){
+    stop("Error: Please provide a value for --num_factors")
+}
+
+
+# Check validity of argument inputs
+if(!file.exists(argv$omic_data_file)){ 
     stop(paste0("Error: ", argv$omic_data_file, 
         " not found. Check your file path and name.")) 
 }
-if(is.na(argv$output_prefix)){ 
-    stop(paste0("Error: Please provide an 'output_prefix'. Use --help for more details.")) 
+if(!grepl(x = argv$omic_data_file, pattern = "\\.tab$", perl = T)){ 
+    stop("Error: --omic_data_file requires .tab extension.")
+}
+if(!is.null(argv$cov_file) && !file.exists(argv$cov_file)){ 
+    stop(paste0("Error: ", argv$cov_file, 
+        " not found. Check your file path and name.")) 
+}
+if(!is.null(argv$cov_file) &&
+    !grepl(x = argv$cov_file, pattern = "\\.tab$", perl = T)){ 
+    stop("Error: --cov_file requires .tab extension.")
 }
 if(is.na(argv$num_factors) | argv$num_factors <= 0 | 
    !is.finite(argv$num_factors) | argv$num_factors != as.integer(argv$num_factors)){ 
@@ -96,11 +114,34 @@ cat(paste0("Loading data from ", argv$omic_data_file, " ..."))
 omic.data <- read.table(argv$omic_data_file, sep = "\t", header = T, 
     check.names = F, comment.char = "", row.names = 1)
 omic.data <- as.matrix(omic.data)
-n.samples <- nrows(omic.data)
-n.features <- ncols(omic.data)
+n.samples <- nrow(omic.data)
+n.features <- ncol(omic.data)
 cat("Done.\n")
 cat(paste0("Loaded data matrix with ", n.samples, " rows and ", 
     n.features, " columns.\n"))
+
+# Load covariate data
+cov.data <- NULL
+if(!is.null(argv$cov_file)){
+    cat(paste0("Loading covariate data from ", argv$cov_file, " ..."))
+    cov.data <- read.table(argv$cov_file, sep = "\t", header = T, as.is = T, 
+        check.names = F, comment.char = "", row.names = 1)
+    cov.data <- as.matrix(cov.data)
+    n.vars <- ncol(cov.data)
+    cat("Done.\n")
+    cat(paste0("Loaded ", n.vars, " covariates.\n"))
+    # Subset and match rows between covariate and omic data matrix
+    cov.subset <- cov.data[rownames(cov.data) %in% rownames(omic.data),]
+    omic.subset <- omic.data[rownames(omic.data) %in% rownames(cov.subset),]
+    match.order <- match(rownames(cov.subset), table = rownames(omic.subset))
+    cov.subset <- cov.subset[match.order,]
+    if(nrow(omic.subset) < nrow(omic.data)){
+        cat(paste0("Data reduced to ", nrow(omic.subset), 
+        " samples after matching with covariate data.\n"))
+    }
+    omic.data <- omic.subset
+    cov.data <- cov.subset
+}
 
 # Set method parameters
 cat(paste0("Setting initialization parameters ..."))
@@ -112,36 +153,40 @@ invisible(PEER_setPriorEps(model, argv$epsprior_a, argv$epsprior_b))
 invisible(PEER_setTolerance(model, argv$tol))
 invisible(PEER_setVarTolerance(model, argv$var_tol))
 invisible(PEER_setNmax_iterations(model, argv$max_iter))
-if (!is.null(argv$covariates) && !is.na(argv$covariates)) {
-    covar.df <- read.table(argv$covariates, sep = "\t", header = T, row.names = 1, as.is = T)
-    covar.df <- sapply(covar.df, as.numeric)
-    cat(paste0("  * including ", dim(covar.df)[2], " covariates", "\n"))
-    invisible(PEER_setCovariates(model, as.matrix(covar.df)))  # samples x covariates
+if(!is.null(cov.data)){
+    invisible(PEER_setCovariates(model, cov.data))
 }
 cat("Done.\n")
 
-# Begin inference routine
-cat(paste0("Estimating ", argv$num_factors, " hidden confounders ...\n"))
+# Run inference routine
+cat(paste0("Beginning estimation of ", argv$num_factors, " hidden factors.\n"))
 time <- system.time(PEER_update(model))
+cat("Finished estimation procedure.\n")
+cat(paste0("Hidden factor estimation completed in ", round(time[3], 2) , " seconds (", round(time[3]/60, 2) ," minutes).\n"))
 
-X <- PEER_getX(model)  # samples x PEER factors
-A <- PEER_getAlpha(model)  # PEER factors x 1
-R <- t(PEER_getResiduals(model))  # genes x samples
+# Retrieve results
+factor.mat <- PEER_getX(model)  # samples x PEER factors
+weight.mat <- PEER_getW(model)  # omic features x PEER factors
+precision.mat <- PEER_getAlpha(model)  # PEER factors x 1
+resid.mat <- t(PEER_getResiduals(model))  # omic features x samples
 
-# add relevant row/column names
-c <- paste0("InferredCov",1:ncol(X))
-rownames(X) <- rownames(omic.data)
-colnames(X) <- c
-rownames(A) <- c
-colnames(A) <- "Alpha"
-A <- as.data.frame(A)
-A$Relevance <- 1.0 / A$Alpha
-rownames(R) <- colnames(omic.data)
-colnames(R) <- rownames(omic.data)
+# Add relevant row/column names
+peer.var.names <- paste0("peer.factor", 1:ncol(factor.mat))
+rownames(factor.mat) <- rownames(omic.data)
+colnames(factor.mat) <- peer.var.names
+colnames(weight.mat) <- peer.var.names
+rownames(weight.mat) <- colnames(omic.data)
+rownames(precision.mat) <- peer.var.names
+colnames(precision.mat) <- "alpha"
+precision.mat <- as.data.frame(precision.mat)
+precision.mat$relevance <- 1.0 / precision.mat$alpha
+rownames(resid.mat) <- colnames(omic.data)
+colnames(resid.mat) <- rownames(omic.data)
 
-# write results
-cat("PEER: writing results ... ")
-WriteTable(t(X), file.path(argv$output_dir, paste0(argv$output_prefix, ".PEER_covariates.txt")), "ID")  # format(X, digits = 6)
-WriteTable(A, file.path(argv$output_dir, paste0(argv$output_prefix, ".PEER_alpha.txt")), "ID")
-WriteTable(R, file.path(argv$output_dir, paste0(argv$output_prefix, ".PEER_residuals.txt")), "ID")
-cat("done.\n")
+# Write results
+cat("Exporting results ... ")
+WriteTable(t(factor.mat), file.path(argv$output_dir, paste0(argv$output_prefix, "_peer_covariates.txt")), "ID")  
+WriteTable(weight.mat, file.path(argv$output_dir, paste0(argv$output_prefix, "_peer_weights.txt")), "ID")
+WriteTable(precision.mat, file.path(argv$output_dir, paste0(argv$output_prefix, "_peer_precisions.txt")), "ID")
+WriteTable(resid.mat, file.path(argv$output_dir, paste0(argv$output_prefix, "_peer_residuals.txt")), "ID")
+cat("Done.\n")
