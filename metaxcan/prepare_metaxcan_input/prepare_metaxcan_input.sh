@@ -22,6 +22,7 @@ show_usage () {
     echo $'\t' "legend_file:        Path to legend file for converting to 1000g ids"
     echo $'\t' "chr:                target chromosome of gxg, legend files (must be the same)"
     echo $'\t' "output_base:        basename to use for creating final output file to be used with metaxcan"
+    echo $'\t' "output_dir:         output directory where files will be written"
     echo
 
     # Exit with error status
@@ -34,7 +35,7 @@ if [ "$1" == "-h" ]; then
 elif [ "$1" == "--help" ]; then
     show_usage
 # Check number of arguments
-elif [ $# -ne 5 ]; then
+elif [ $# -ne 6 ]; then
     show_usage "Incorrect number of arguments!"
 fi
 
@@ -42,7 +43,7 @@ fi
 # INPUTS
 #####################################
 ###### Directories
-WRK_DIR=/data
+WRK_DIR=$6
 
 ###### Executables
 convert_to_1000g="/opt/code_docker_lib/convert_to_1000g_ids.pl"
