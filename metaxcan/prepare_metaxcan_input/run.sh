@@ -8,4 +8,5 @@ finish() {
 }
 trap finish EXIT
 
-/bin/bash /opt/code_docker_lib/get_unique_gtex_variants.sh "$@"
+/bin/bash /opt/code_docker_lib/prepare_metaxcan_input.sh "$@"
+

@@ -44,18 +44,31 @@ RUN echo 'options(\n\
 RUN R -e 'install.packages(c("plyr"), repos="http://cran.us.r-project.org")'
 
 # =====================================================================
-# Standard docker image stuff
+# Get accessory scripts from github repos
 # =====================================================================
-
-# Add scripts to make it run
-ADD merge_gxg_gtex_variants.R /
-ADD run.sh /
 
 # Add to /opt folder
 RUN mkdir /opt/code_docker_lib
 
+# Clone git repo, checkout specific commit to keep versioning constant, transfer helper scripts to code directory
+RUN git clone https://github.com/RTIInternational/code_docker_lib.git && \
+    cd /code_docker_lib && git reset --hard beea21a956fc35bb7fb8367dd8d6b3125efb9812 && \
+    mv /code_docker_lib/convert_to_1000g_ids/convert_to_1000g_ids.pl /opt/code_docker_lib/ && \
+    mv /code_docker_lib/extract_by_id/extract_by_id.pl /opt/code_docker_lib/ && \
+    rm -rf /code_docker_lib
+
+# =====================================================================
+# Add accesory scripts included in directory
+# =====================================================================
+
+# Add scripts to make it run
+ADD merge_gxg_gtex_variants.R /
+ADD prepare_metaxcan_input.sh /
+ADD run.sh /
+
 # Move scripts to
 RUN mv merge_gxg_gtex_variants.R /opt/code_docker_lib && \
+    mv prepare_metaxcan_input.sh /opt/code_docker_lib && \
     mv run.sh /opt/code_docker_lib
 
 # Change permissions to make things exectuable
