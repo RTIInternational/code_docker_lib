@@ -82,8 +82,11 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
 
 #### Build code for installing DESeq2 and apeglm ####    
 
-# Install dependencies and R PEER package
 WORKDIR /
+
+#Install packages from CRAN and bioconductor:
+RUN Rscript -e 'install.packages(c("BiocManager"));'
+RUN Rscript -e 'BiocManager::install(c("DESeq2", "apeglm"), version = "3.8");'
 
 
 # TODO: Add wrapper script
@@ -95,9 +98,4 @@ WORKDIR /
 
 ENTRYPOINT ["R"]
 
-CMD [""]
-
-
-#Install packages from CRAN and bioconductor:
-RUN Rscript -e 'install.packages(c("BiocManager"));'
-RUN Rscript -e 'BiocManager::install(c("DESeq2", "apeglm"), version = "3.8");'
+#CMD [""]
