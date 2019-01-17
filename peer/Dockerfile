@@ -60,11 +60,11 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
         perl-base \
         gpg-agent \
         libxrender1 \
+    && apt-get install -y --no-install-recommends libopenblas-base \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-        littler \
         r-base=${R_BASE_VERSION} \
         r-base-dev=${R_BASE_VERSION} \
         r-recommended=${R_BASE_VERSION} \
