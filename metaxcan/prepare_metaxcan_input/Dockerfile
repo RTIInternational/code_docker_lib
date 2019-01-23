@@ -79,4 +79,4 @@ RUN mkdir /data
 WORKDIR /data
 
 # Create entrypoint that runs the run.sh wrapper script
-ENTRYPOINT ["/bin/bash", "/opt/code_docker_lib/run.sh"]
+#ENTRYPOINT ["/bin/bash", "/opt/code_docker_lib/run.sh"]
