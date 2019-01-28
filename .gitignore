@@ -77,3 +77,6 @@ _build
 
 # PyBuilder
 target/
+
+# Mac folders
+.DS_Store
