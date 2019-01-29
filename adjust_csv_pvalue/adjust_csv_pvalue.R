@@ -11,7 +11,7 @@ parser = add_option(object=parser, opt_str=c("--output_file"), default=NULL, typ
 parser = add_option(object=parser, opt_str=c("--pvalue_colname"), default=NULL, type="character",
                     help="[REQUIRED] Name of input file column containing pvalues to be adjusted.")
 parser = add_option(object=parser, opt_str=c("--method"), default=NULL, type="character",
-                    help="Correction method (holm, hochberg, hommel, bonferroni, BH, BY, fdr, none)")
+                    help="[REQUIRED] Correction method (holm, hochberg, hommel, bonferroni, BH, BY, fdr, none)")
 parser = add_option(object=parser, opt_str=c("--n"), default=NULL, type="integer",
                     help="Number of comparisons, must be at least length(p_value_col); default is to length(p_value_col)")
 parser = add_option(object=parser, opt_str=c("--filter_threshold"), default=NULL, type="double",
@@ -30,6 +30,10 @@ if(is.null(argv$output_file)){
 if(is.null(argv$pvalue_colname)){
   stop("Error: Please provide a value for --pvalue_colname")
 }
+if(is.null(argv$method)){
+  stop("Error: Please provide a value for --method")
+}
+
 
 # Check to make sure method values are correct
 if(!is.null(argv$method) && !(argv$method %in% c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"))){
@@ -67,18 +71,17 @@ if((!is.null(argv$n)) && (argv$n < nrow(data))){
 if(is.null(argv$method)){
   method="holm"
 }else{
-  mehtod = argv$method
+  method = argv$method
 }
 
-# Set num comparisons value
+# Adjust pvalues based
 if(is.null(argv$n)){
-  n = nrow(data)
+  # Number of test corrections automatically determined based on column length
+  data$pvalue_adjusted = p.adjust(data[[argv$pvalue_colname]], method=method)
 }else{
-  n = argv$n
+  # Adjust pvalues with a set number of test corrections
+  data$pvalue_adjusted = p.adjust(data[[argv$pvalue_colname]], method=method, n=argv$n)
 }
-
-# Adjust pvalues
-data$pvalue_adjusted = p.adjust(data[[argv$pvalue_colname]], method=method, n=n)
 
 # Filter if necessary
 if(!is.null(argv$filter_threshold)){
