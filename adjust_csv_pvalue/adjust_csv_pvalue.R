@@ -64,10 +64,6 @@ if((!is.null(argv$n)) && (argv$n < nrow(data))){
   stop(paste0("Error: num comparisons (",argv$n,") must be larger than number of pvalues (",nrow(data), ") in input file!"))
 }
 
-
-# Create adusted pvalue column
-print(paste0("Method: ",argv$method))
-
 # Adjust pvalues based
 if(is.null(argv$n)){
   # Number of test corrections automatically determined based on column length
