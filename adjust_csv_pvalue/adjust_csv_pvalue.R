@@ -66,21 +66,15 @@ if((!is.null(argv$n)) && (argv$n < nrow(data))){
 
 
 # Create adusted pvalue column
-
-# Set method value
-if(is.null(argv$method)){
-  method="holm"
-}else{
-  method = argv$method
-}
+print(paste0("Method: ",argv$method))
 
 # Adjust pvalues based
 if(is.null(argv$n)){
   # Number of test corrections automatically determined based on column length
-  data$pvalue_adjusted = p.adjust(data[[argv$pvalue_colname]], method=method)
+  data$pvalue_adjusted = p.adjust(data[[argv$pvalue_colname]], method=argv$method)
 }else{
   # Adjust pvalues with a set number of test corrections
-  data$pvalue_adjusted = p.adjust(data[[argv$pvalue_colname]], method=method, n=argv$n)
+  data$pvalue_adjusted = p.adjust(data[[argv$pvalue_colname]], method=argv$method, n=argv$n)
 }
 
 # Filter if necessary
