@@ -89,15 +89,11 @@ WORKDIR /
 #Install packages from CRAN and bioconductor:
 RUN wget https://cran.r-project.org/src/contrib/MatrixEQTL_2.2.tar.gz \
     && Rscript -e 'install.packages("MatrixEQTL_2.2.tar.gz", repos = NULL);' \
+    && Rscript -e 'install.packages("optparse");' \
     && rm MatrixEQTL_2.2.tar.gz
 
-# TODO: Add wrapper script
-#COPY run_peer.R /opt/
+COPY run_matrix_eqtl.R /opt/
 
-#ENV PATH=pkg-config:$PATH
+ENV PATH=pkg-config:$PATH
 
-#WORKDIR /
-
-ENTRYPOINT ["R"]
-
-# CMD [""]
+CMD ["Rscript /opt/run_matrix_eqtl.R"]
