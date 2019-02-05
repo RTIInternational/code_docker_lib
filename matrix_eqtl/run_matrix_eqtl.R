@@ -39,7 +39,7 @@ p <- add_option(object = p, opt_str = c("--no_fdr"), action = "store_true", defa
 p <- add_option(object = p, opt_str = c("--output_dir", "-o"), default = ".",
     help = "Directory in which to save outputs [default=%default].")
 p <- add_option(object = p, opt_str = c("--normalize"), type = "character", default = "none",
-    help = "Apply normalization to the omic data values in --omic_data_file. Must be either \"none\", \"rint\", \"log\" [default=%default].")
+    help = "Apply normalization to the omic data values in --omic_data_file. Must be either \"none\", \"rint\" (for rank inverse-normal transform), or \"log\" (for log10 transform) [default=%default].")
 p <- add_option(object = p, opt_str = c("--version", "-v"), action = "store_true", default = F,
     help = "Print version number.")
 argv <- parse_args(p)

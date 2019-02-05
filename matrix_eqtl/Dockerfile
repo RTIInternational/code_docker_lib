@@ -81,19 +81,21 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
-#### Build code for installing DESeq2 and apeglm ####    
+#### Install Matrix eQTL ####    
 
-# Install dependencies and R PEER package
 WORKDIR /
 
 #Install packages from CRAN and bioconductor:
 RUN wget https://cran.r-project.org/src/contrib/MatrixEQTL_2.2.tar.gz \
+    && wget https://cran.r-project.org/src/contrib/optparse_1.6.1.tar.gz \
+    && wget https://cran.r-project.org/src/contrib/getopt_1.20.2.tar.gz \
     && Rscript -e 'install.packages("MatrixEQTL_2.2.tar.gz", repos = NULL);' \
-    && Rscript -e 'install.packages("optparse");' \
-    && rm MatrixEQTL_2.2.tar.gz
+    && Rscript -e 'install.packages("getopt_1.20.2.tar.gz", repos = NULL);' \
+    && Rscript -e 'install.packages("optparse_1.6.1.tar.gz", repos = NULL);' \
+    && rm MatrixEQTL_2.2.tar.gz optparse_1.6.1.tar.gz getopt_1.20.2.tar.gz
 
 COPY run_matrix_eqtl.R /opt/
 
 ENV PATH=pkg-config:$PATH
 
-CMD ["Rscript /opt/run_matrix_eqtl.R"]
+CMD ["Rscript /opt/run_matrix_eqtl.R --help"]
