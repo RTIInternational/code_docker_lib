@@ -16,6 +16,8 @@ parser = add_option(object=parser, opt_str=c("--n"), default=NULL, type="integer
                     help="Number of comparisons, must be at least length(p_value_col); default is to length(p_value_col)")
 parser = add_option(object=parser, opt_str=c("--filter_threshold"), default=NULL, type="double",
                     help="Exclude rows in output over this adjusted p-value threshold")
+parser = add_option(object=parser, opt_str=c("--tab_delimited"), default=FALSE, type="logical", action="store_true",dest="tab_delimited",
+                    help="Input file uses tabs as field separators instead of commas [default %default]")
 
 ############## Parse command line
 argv = parse_args(parser)
@@ -52,7 +54,11 @@ if((!is.null(argv$filter_threshold)) && ((argv$filter_threshold < 0) || (argv$fi
 
 
 # Load dataset
+if(argv$tab_delimited){
+  data = read.csv(argv$input_file,header=T,sep="\t")
+}else{
 data = read.csv(argv$input_file, header=T)
+}
 
 # Check to make sure colname exists
 if(! argv$pvalue_colname %in% colnames(data)){
