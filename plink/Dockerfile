@@ -44,13 +44,13 @@ ENV LANG en_US.UTF-8
 
 #### Install plink dependencies and plink ####
 
-RUN wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20190215.zip \
-    && unzip plink_linux_x86_64_20190215.zip -d /plink_tmp \
-    && cp /plink_tmp/plink /opt/ \
-    && rm -rf plink_linux_x86_64_20190215.zip plink_tmp
+RUN wget http://s3.amazonaws.com/plink2-assets/plink2_linux_x86_64_20190221.zip \
+    && unzip plink2_linux_x86_64_20190221.zip -d /plink_tmp \
+    && cp /plink_tmp/plink2 /opt/ \
+    && rm -rf plink2_linux_x86_64_20190221.zip plink_tmp
 
 WORKDIR /
 
 ENV PATH=pkg-config:$PATH:/opt/
 
-CMD ["plink"]
+CMD ["plink2"]
