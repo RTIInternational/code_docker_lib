@@ -2,7 +2,6 @@ FROM ubuntu:18.04
 
 # Add scripts to make it run
 ADD convert_to_1000g_ids.pl /
-ADD run.sh /
 
 # Add to /opt folder
 RUN mkdir /opt/code_docker_lib
