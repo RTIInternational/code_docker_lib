@@ -183,9 +183,9 @@ rint <- function(data){
 normalize <- function(file, method = "rint"){
     pheno.data <- read.table(file, header = T)
     if(method == "rint"){
-        pheno.data[,2:ncol(pheno.data)] <- apply(pheno.data[,-1], 1, rint)
+        pheno.data[,2:ncol(pheno.data)] <- t(apply(pheno.data[,-1], 1, rint))
     }else if(method == "log"){
-        pheno.data[,2:ncol(pheno.data)] <- apply(pheno.data[,-1], 1, log10)
+        pheno.data[,2:ncol(pheno.data)] <- t(apply(pheno.data[,-1], 1, log10))
     }else{
         stop("Error: 'method' must be either 'rint' or 'log10'.")
     }
