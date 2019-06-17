@@ -28,6 +28,7 @@ RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/
         wget \
         ca-certificates \
         fonts-texgyre \
+        libkeyutils1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure default locale, see https://github.com/rocker-org/rocker/issues/19
@@ -87,8 +88,8 @@ WORKDIR /
 
 #Install packages from CRAN and bioconductor:
 RUN wget https://cran.r-project.org/src/contrib/MatrixEQTL_2.2.tar.gz \
-    && wget https://cran.r-project.org/src/contrib/optparse_1.6.1.tar.gz \
-    && wget https://cran.r-project.org/src/contrib/getopt_1.20.2.tar.gz \
+    && wget https://cran.r-project.org/src/contrib/Archive/optparse/optparse_1.6.1.tar.gz \
+    && wget https://cran.r-project.org/src/contrib/Archive/getopt/getopt_1.20.2.tar.gz \
     && Rscript -e 'install.packages("MatrixEQTL_2.2.tar.gz", repos = NULL);' \
     && Rscript -e 'install.packages("getopt_1.20.2.tar.gz", repos = NULL);' \
     && Rscript -e 'install.packages("optparse_1.6.1.tar.gz", repos = NULL);' \
