@@ -5,16 +5,17 @@ FROM ubuntu:18.04
 # Maintainer and author
 LABEL maintainer="Bryan Quach <bquach@rti.org>"
 
-#### Build code for installing R ####
+#### Basic Ubuntu setup ####
 
 # Set a default user. Available via runtime flag `--user docker` 
-# Add user to 'staff' group, granting them write privileges to /usr/local/lib/R/site.library
-# User should also have & own a home directory (for rstudio or linked volumes to work properly). 
+# Add user to 'staff' group and make home directory 
 RUN useradd docker \
     && mkdir /home/docker \
     && chown docker:docker /home/docker \
     && addgroup docker staff
 
+ENV DEBIAN_FRONTEND noninteractive
+    
 RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/apt/sources.list \
     && apt-get update \ 
     && apt-get install -y --no-install-recommends \
@@ -24,10 +25,12 @@ RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/
         ed \
         less \
         locales \
-        vim-tiny \
+        vim \
         wget \
         ca-certificates \
         fonts-texgyre \
+        make \
+        libglib2.0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure default locale, see https://github.com/rocker-org/rocker/issues/19
@@ -38,59 +41,60 @@ RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
-# Add R repo to get R 3.5.1
+# Add R repo to get more R versions
 # Install littler, and create a link for littler in /usr/local/bin
 # Set a default CRAN repo, and make sure littler knows about it
 # Install stringr to make dococt install (from source) easier
-ENV R_BASE_VERSION 3.5.1-2bionic
+ENV R_BASE_VERSION 3.6.1-3bionic
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
-    && apt-get update \
+RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         cpp \
+        libpcre2-dev \
+        libthai0 \
+        liblzma-dev \
         libgirepository-1.0-1 \
-        libglib2.0-0 \
         libelf1 \
         libssl-dev \
         libcurl4-openssl-dev \
         libxml2-dev \
-        libmpx0 \
+        libmpx2 \
         curl \
         perl-base \
         gpg-agent \
         libxrender1 \
-    && apt-get install -y --no-install-recommends libopenblas-base \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+        libopenblas-base
+        
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' \
     && apt-get update \
-    && apt-get install -y --no-install-recommends \
-        r-base=${R_BASE_VERSION} \
-        r-base-dev=${R_BASE_VERSION} \
-        r-recommended=${R_BASE_VERSION} \
-        r-cran-littler \
-        r-cran-stringr \
-        && echo 'options(repos = c(CRAN = "https://cloud.r-project.org/"))' >> /etc/R/Rprofile.site \
-        && echo 'source("/etc/R/Rprofile.site")' >> /etc/littler.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/testInstalled.r /usr/local/bin/testInstalled.r \
-    && install.r docopt \
+    && apt-get install -y --no-install-recommends --no-upgrade r-base-core=${R_BASE_VERSION}
+RUN apt-get install -y --no-install-recommends --no-upgrade r-recommended=${R_BASE_VERSION} \
+    r-base=${R_BASE_VERSION} \
+    r-base-dev=${R_BASE_VERSION} \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
-#### Build code for installing DESeq2 and apeglm ####    
+#### Install PySAM ####    
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        python-dev \
+        python-pip \
+    && pip install setuptools \
+    && pip install wheel \
+    && pip install pysam \
+    && apt-get autoremove \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /
-
+#### Install DEXSeq ####    
 #Install packages from CRAN and bioconductor:
 RUN Rscript -e 'install.packages(c("BiocManager"));'
-RUN Rscript -e 'BiocManager::install(c("DESeq2", "tximport", "apeglm"), version = "3.8");'
-
-
-ENV PATH=pkg-config:$PATH
-
+RUN Rscript -e 'BiocManager::install(c("DEXSeq", "tximport"), version = "3.9");'
+RUN ln -s /usr/local/lib/R/site-library/DEXSeq/python_scripts/dexseq_count.py /opt/dexseq_count.py \
+    && ln -s /usr/local/lib/R/site-library/DEXSeq/python_scripts/dexseq_prepare_annotation.py /opt/dexseq_prepare_annotation.py
 WORKDIR /
 
-CMD ["R"]
+ENV PATH=pkg-config:$PATH:/opt/
+
+CMD ["ls", "-1", "/opt"]

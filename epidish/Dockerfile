@@ -5,16 +5,17 @@ FROM ubuntu:18.04
 # Maintainer and author
 LABEL maintainer="Bryan Quach <bquach@rti.org>"
 
-#### Build code for installing R ####
+#### Basic Ubuntu setup ####
 
 # Set a default user. Available via runtime flag `--user docker` 
-# Add user to 'staff' group, granting them write privileges to /usr/local/lib/R/site.library
-# User should also have & own a home directory (for rstudio or linked volumes to work properly). 
+# Add user to 'staff' group and make home directory 
 RUN useradd docker \
     && mkdir /home/docker \
     && chown docker:docker /home/docker \
     && addgroup docker staff
 
+ENV DEBIAN_FRONTEND noninteractive
+    
 RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/apt/sources.list \
     && apt-get update \ 
     && apt-get install -y --no-install-recommends \
@@ -24,10 +25,12 @@ RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/
         ed \
         less \
         locales \
-        vim-tiny \
+        vim \
         wget \
         ca-certificates \
         fonts-texgyre \
+        make \
+        libglib2.0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure default locale, see https://github.com/rocker-org/rocker/issues/19
@@ -80,17 +83,13 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
-#### Build code for installing DESeq2 and apeglm ####    
+#### Install epidish dependencies and epidish ####
+
+RUN Rscript -e 'install.packages(c("devtools"), repos = "http://cran.us.r-project.org")' \
+    && Rscript -e 'devtools::install_github("sjczheng/EpiDISH")'
 
 WORKDIR /
-
-#Install packages from CRAN and bioconductor:
-RUN Rscript -e 'install.packages(c("BiocManager"));'
-RUN Rscript -e 'BiocManager::install(c("DESeq2", "tximport", "apeglm"), version = "3.8");'
-
 
 ENV PATH=pkg-config:$PATH
 
-WORKDIR /
-
-CMD ["R"]
+CMD ["echo", "EpiDISH must be used within an interactive R session. Try 'docker run --rm -it rticode/epidish:2.1.0 R')"]
