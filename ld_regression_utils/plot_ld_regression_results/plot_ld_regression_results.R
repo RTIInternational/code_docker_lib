@@ -25,6 +25,8 @@ parser = add_option(object=parser, opt_str=c("--pvalue_threshold"), default=1.0,
                     help="Exclude traits from figure with pvalues above a given threshold [default %default]")
 parser = add_option(object=parser, opt_str=c("--group_order_file"), default=NULL, type="character",
                     help="csv containing group orders as they will appear on plot (one group per row, no header)")
+parser = add_option(object=parser, opt_str=c("--significant_p"), default=0, type="double",
+                    help="Bold all of the phenotypes that have a P-value below this value.")
 ############## Parse command line
 argv = parse_args(parser)
 
@@ -128,6 +130,10 @@ data$group_color = factor(data$group, levels=rev(levels(data$group)))
 # Order factors for plotting
 data$trait = factor(data$trait, levels=data$trait)
 
+bold_vector <- data$p < pvalue_bold
+bold_vector[which(bold_vector == TRUE)] <- "bold"
+bold_vector[which(bold_vector == FALSE)] <- "plain"
+
 pdf(argv$output_file, width=11, height=8)
 ggplot(data, aes(x = rg, y = trait, color=group)) +
   geom_vline(aes(xintercept = 0), size = 0.25, linetype = "dashed") +
@@ -135,4 +141,9 @@ ggplot(data, aes(x = rg, y = trait, color=group)) +
   geom_point(size = 3.5) + theme_bw() +
   ylab("") + theme(legend.title=element_blank()) +
   guides(color = guide_legend(reverse=T))
+
+p + theme(
+    axis.text.y = element_text(face=bold_vector)
+)
+
 dev.off()
