@@ -53,6 +53,11 @@ if((!is.null(argv$pvalue_threshold)) && ((argv$pvalue_threshold < 0) || (argv$pv
   stop(paste0("Error: pvalue_threshold must be between 0 and 1"))
 }
 
+# Make sure bold value is valid
+if((!is.null(argv$significant_p)) && ((argv$significant_p < 0) || (argv$pvalue_threshold > 1))){
+  stop(paste0("Error: significant_p must be between 0 and 1"))
+}
+
 # Set input file delimiter character
 if(argv$comma_delimited){
   delim = ","
@@ -67,6 +72,7 @@ trait_label_colname = argv$label_colname
 group_label_colname = argv$group_colname
 pvalue_colname = argv$pvalue_colname
 pvalue_threshold = argv$pvalue_threshold
+pvalue_bold = argv$significant_p
 
 # Read data from CSV
 data = read.table(argv$input_file, header=T, stringsAsFactors=F, sep=delim)
@@ -129,20 +135,19 @@ if(nrow(data) == 0){
 data$group_color = factor(data$group, levels=rev(levels(data$group)))
 # Order factors for plotting
 data$trait = factor(data$trait, levels=data$trait)
-
-bold_vector <- data$p < pvalue_bold
+bold_vector <- (data$p < pvalue_bold)
 bold_vector[which(bold_vector == TRUE)] <- "bold"
 bold_vector[which(bold_vector == FALSE)] <- "plain"
 
 pdf(argv$output_file, width=11, height=8)
-ggplot(data, aes(x = rg, y = trait, color=group)) +
+my_plot <- ggplot(data, aes(x = rg, y = trait, color=group)) +
   geom_vline(aes(xintercept = 0), size = 0.25, linetype = "dashed") +
   geom_errorbarh(aes(xmin = xmin, xmax = xmax), size = .5, height = .2) +
   geom_point(size = 3.5) + theme_bw() +
   ylab("") + theme(legend.title=element_blank()) +
   guides(color = guide_legend(reverse=T))
 
-p + theme(
+my_plot + theme(
     axis.text.y = element_text(face=bold_vector)
 )
 
