@@ -25,8 +25,8 @@ parser = add_option(object=parser, opt_str=c("--pvalue_threshold"), default=1.0,
                     help="Exclude traits from figure with pvalues above a given threshold [default %default]")
 parser = add_option(object=parser, opt_str=c("--group_order_file"), default=NULL, type="character",
                     help="csv containing group orders as they will appear on plot (one group per row, no header)")
-parser = add_option(object=parser, opt_str=c("--significant_p"), default=0, type="double",
-                    help="Bold all of the phenotypes that have a P-value below this value.")
+parser = add_option(object=parser, opt_str=c("--bold_p"), default="no", type="character",
+                    help=" Bold all of the phenotypes that have a significant P-value (bonferroni corrected).")
 parser = add_option(object=parser, opt_str=c("--title"), default="", type="character",
 		    help="Title of the plot. Make sure to wrap in quotes.")
 ############## Parse command line
@@ -55,9 +55,9 @@ if((!is.null(argv$pvalue_threshold)) && ((argv$pvalue_threshold < 0) || (argv$pv
   stop(paste0("Error: pvalue_threshold must be between 0 and 1"))
 }
 
-# Make sure bold value is valid
-if((!is.null(argv$significant_p)) && ((argv$significant_p < 0) || (argv$pvalue_threshold > 1))){
-  stop(paste0("Error: significant_p must be between 0 and 1"))
+# Bold significant phenotypes (bonferroni corrected) should be "yes" or "no"
+if( !(argv$bold_p %in% list("yes", "no"))){
+  stop(paste0("Error: bold_p must be either yes or no (in quotes)."))
 }
 
 # Set input file delimiter character
@@ -75,7 +75,6 @@ trait_label_colname = argv$label_colname
 group_label_colname = argv$group_colname
 pvalue_colname = argv$pvalue_colname
 pvalue_threshold = argv$pvalue_threshold
-pvalue_bold = argv$significant_p
 plot_title = argv$title
 
 
@@ -129,6 +128,17 @@ data$xmax = data$rg + data$se * 1.96
 
 # Sort by correlation coefficient
 data = data[order(data$group, data$rg), ]
+
+
+if (argv$bold_p == "yes") {
+	pvalue_bold <- 0.05 / length(data$p)   # bonferroni corrected p-value. 
+} else {
+	#pvalue_bold <- 0   # don't bold any phenotype
+	pvalue_bold <- 0.3   # test
+}
+
+print(pvalue_bold)
+
 
 # Subset by pvalue
 data = data[data$p < pvalue_threshold,]
