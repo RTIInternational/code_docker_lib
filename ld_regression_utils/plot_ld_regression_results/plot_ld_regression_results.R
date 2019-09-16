@@ -133,11 +133,10 @@ data = data[order(data$group, data$rg), ]
 if (argv$bold_p == "yes") {
 	pvalue_bold <- 0.05 / length(data$p)   # bonferroni corrected p-value. 
 } else {
-	#pvalue_bold <- 0   # don't bold any phenotype
-	pvalue_bold <- 0.3   # test
+	pvalue_bold <- 0   # don't bold any phenotype
 }
 
-print(pvalue_bold)
+#print(pvalue_bold)
 
 
 # Subset by pvalue
