@@ -27,6 +27,8 @@ parser = add_option(object=parser, opt_str=c("--group_order_file"), default=NULL
                     help="csv containing group orders as they will appear on plot (one group per row, no header)")
 parser = add_option(object=parser, opt_str=c("--significant_p"), default=0, type="double",
                     help="Bold all of the phenotypes that have a P-value below this value.")
+parser = add_option(object=parser, opt_str=c("--title"), default="", type="character",
+		    help="Title of the plot. Make sure to wrap in quotes.")
 ############## Parse command line
 argv = parse_args(parser)
 
@@ -65,6 +67,7 @@ if(argv$comma_delimited){
   delim = "\t"
 }
 
+
 # Set parameters from command line
 rg_colname = argv$rg_colname
 se_colname = argv$se_colname
@@ -73,6 +76,8 @@ group_label_colname = argv$group_colname
 pvalue_colname = argv$pvalue_colname
 pvalue_threshold = argv$pvalue_threshold
 pvalue_bold = argv$significant_p
+plot_title = argv$title
+
 
 # Read data from CSV
 data = read.table(argv$input_file, header=T, stringsAsFactors=F, sep=delim)
@@ -144,8 +149,8 @@ my_plot <- ggplot(data, aes(x = rg, y = trait, color=group)) +
   geom_vline(aes(xintercept = 0), size = 0.25, linetype = "dashed") +
   geom_errorbarh(aes(xmin = xmin, xmax = xmax), size = .5, height = .2) +
   geom_point(size = 3.5) + theme_bw() +
-  ylab("") + theme(legend.title=element_blank()) +
-  guides(color = guide_legend(reverse=T))
+  ylab("") + theme(legend.title=element_blank(), plot.title = element_text(hjust = 0.5)) +
+  guides(color = guide_legend(reverse=T)) + ggtitle(plot_title)
 
 my_plot + theme(
     axis.text.y = element_text(face=bold_vector)
