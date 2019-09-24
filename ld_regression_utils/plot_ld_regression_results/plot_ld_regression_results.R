@@ -25,7 +25,7 @@ parser = add_option(object=parser, opt_str=c("--pvalue_threshold"), default=1.0,
                     help="Exclude traits from figure with pvalues above a given threshold [default %default]")
 parser = add_option(object=parser, opt_str=c("--group_order_file"), default=NULL, type="character",
                     help="csv containing group orders as they will appear on plot (one group per row, no header)")
-parser = add_option(object=parser, opt_str=c("--bold_p"), default="no", type="character",
+parser = add_option(object=parser, opt_str=c("--bold_p"), default="yes", type="character",
                     help=" Bold all of the phenotypes that have a significant P-value (bonferroni corrected).")
 parser = add_option(object=parser, opt_str=c("--title"), default="", type="character",
 		    help="Title of the plot. Make sure to wrap in quotes.")
