@@ -25,6 +25,10 @@ parser = add_option(object=parser, opt_str=c("--pvalue_threshold"), default=1.0,
                     help="Exclude traits from figure with pvalues above a given threshold [default %default]")
 parser = add_option(object=parser, opt_str=c("--group_order_file"), default=NULL, type="character",
                     help="csv containing group orders as they will appear on plot (one group per row, no header)")
+parser = add_option(object=parser, opt_str=c("--bold_p"), default="yes", type="character",
+                    help=" Bold all of the phenotypes that have a significant P-value (bonferroni corrected).")
+parser = add_option(object=parser, opt_str=c("--title"), default="", type="character",
+		    help="Title of the plot. Make sure to wrap in quotes.")
 ############## Parse command line
 argv = parse_args(parser)
 
@@ -51,12 +55,18 @@ if((!is.null(argv$pvalue_threshold)) && ((argv$pvalue_threshold < 0) || (argv$pv
   stop(paste0("Error: pvalue_threshold must be between 0 and 1"))
 }
 
+# Bold significant phenotypes (bonferroni corrected) should be "yes" or "no"
+if( !(argv$bold_p %in% list("yes", "no"))){
+  stop(paste0("Error: bold_p must be either yes or no (in quotes)."))
+}
+
 # Set input file delimiter character
 if(argv$comma_delimited){
   delim = ","
 }else{
   delim = "\t"
 }
+
 
 # Set parameters from command line
 rg_colname = argv$rg_colname
@@ -65,6 +75,8 @@ trait_label_colname = argv$label_colname
 group_label_colname = argv$group_colname
 pvalue_colname = argv$pvalue_colname
 pvalue_threshold = argv$pvalue_threshold
+plot_title = argv$title
+
 
 # Read data from CSV
 data = read.table(argv$input_file, header=T, stringsAsFactors=F, sep=delim)
@@ -117,6 +129,16 @@ data$xmax = data$rg + data$se * 1.96
 # Sort by correlation coefficient
 data = data[order(data$group, data$rg), ]
 
+
+if (argv$bold_p == "yes") {
+	pvalue_bold <- 0.05 / length(data$p)   # bonferroni corrected p-value. 
+} else {
+	pvalue_bold <- 0   # don't bold any phenotype
+}
+
+#print(pvalue_bold)
+
+
 # Subset by pvalue
 data = data[data$p < pvalue_threshold,]
 
@@ -127,12 +149,20 @@ if(nrow(data) == 0){
 data$group_color = factor(data$group, levels=rev(levels(data$group)))
 # Order factors for plotting
 data$trait = factor(data$trait, levels=data$trait)
+bold_vector <- (data$p < pvalue_bold)
+bold_vector[which(bold_vector == TRUE)] <- "bold"
+bold_vector[which(bold_vector == FALSE)] <- "plain"
 
 pdf(argv$output_file, width=11, height=8)
-ggplot(data, aes(x = rg, y = trait, color=group)) +
+my_plot <- ggplot(data, aes(x = rg, y = trait, color=group)) +
   geom_vline(aes(xintercept = 0), size = 0.25, linetype = "dashed") +
   geom_errorbarh(aes(xmin = xmin, xmax = xmax), size = .5, height = .2) +
   geom_point(size = 3.5) + theme_bw() +
-  ylab("") + theme(legend.title=element_blank()) +
-  guides(color = guide_legend(reverse=T))
+  ylab("") + theme(legend.title=element_blank(), plot.title = element_text(hjust = 0.5)) +
+  guides(color = guide_legend(reverse=T)) + ggtitle(plot_title)
+
+my_plot + theme(
+    axis.text.y = element_text(face=bold_vector)
+)
+
 dev.off()
