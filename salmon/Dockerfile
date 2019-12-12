@@ -42,43 +42,55 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
 #### Install dependencies ####
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        gcc \
-        g++ \
-        autoconf \
-        zlib1g-dev \
-        libboost1.65-all-dev \
-        libc6-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get autoremove
+ENV PACKAGES git gcc g++ liblzma-dev libbz2-dev \
+    zlib1g-dev curl unzip autoconf \
+    libpsm-infinipath1 librdmacm1 libnghttp2-14 libboost-locale-dev \
+    libboost-stacktrace-dev libjemalloc-dev
 
-### Install MashMap ###
-RUN wget https://github.com/marbl/MashMap/archive/v2.0.tar.gz \
-    && tar -xzf v2.0.tar.gz \
-    && rm v2.0.tar.gz \
-    && cd MashMap-2.0 \
-    && mkdir /opt/lib \
-    && cp /usr/lib/x86_64-linux-gnu/libboost_math_c99.a /opt/lib/ \
-    && ./bootstrap.sh \
-    && ./configure --prefix=/opt/ --with-boost=/opt \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --fix-missing ${PACKAGES} \
+    && apt-get clean
+    
+RUN apt-get update \ 
+    && apt-get install -y --no-install-recommends libboost-all-dev \
+    && apt-get clean
+
+# Install cmake 3.12 because FindIconv module is needed    
+ENV version 3.12
+ENV build 0
+
+RUN apt remove --purge --auto-remove cmake \
+    && mkdir ~/temp \
+    && cd ~/temp \
+    && wget https://cmake.org/files/v$version/cmake-$version.$build.tar.gz \
+    && tar -xzvf cmake-$version.$build.tar.gz \
+    && mv cmake-$version.$build/ /usr/share/ \
+    && cd /usr/share/cmake-$version.$build/ \
+    && ./bootstrap \
+    && make -j$(nproc) \
+    && make install \
+    && ln -s /usr/share/cmake-$version.$build/bin/cmake /usr/bin/cmake \
+    && rm -rf ~/temp
+
+#### Install Salmon ####
+ENV SALMON_VERSION 1.0.0
+ENV CMAKE_REQUIRED_INCLUDES /usr/include
+
+RUN apt-get update \
+    && curl -k -L https://github.com/COMBINE-lab/salmon/archive/v${SALMON_VERSION}.tar.gz -o salmon-v${SALMON_VERSION}.tar.gz \
+    && tar xzf salmon-v${SALMON_VERSION}.tar.gz \
+    && cd salmon-${SALMON_VERSION} \
+    && mkdir build \
+    && cd build \
+    && cmake .. -DCMAKE_INSTALL_PREFIX=/usr \
     && make \
     && make install \
-    && cd / \
-    && rm -rf MashMap-2.0
+    && ln -s /usr/bin/salmon /opt/salmon \
+    && rm -rf salmon-v${SALMON_VERSION}.tar.gz salmon-${SALMON_VERSION}
     
-#### Install Salmon ####
-
-RUN wget https://github.com/COMBINE-lab/salmon/releases/download/v0.14.1/salmon-0.14.1_linux_x86_64.tar.gz \
-    && tar -xzf salmon-0.14.1_linux_x86_64.tar.gz \
-    && rm salmon-0.14.1_linux_x86_64.tar.gz \
-    && mv salmon-latest_linux_x86_64/bin/* /opt/bin/ \
-    && mv salmon-latest_linux_x86_64/lib/* /opt/lib/ \
-    && rm -r salmon-latest_linux_x86_64/
-
 WORKDIR /
 
-ENV PATH=pkg-config:$PATH:/opt/bin/
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/lib/
+ENV PATH pkg-config:$PATH:/opt/bin/
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/lib:/opt/lib
 
 CMD ["salmon", "--help"]
