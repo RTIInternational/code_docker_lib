@@ -21,12 +21,9 @@ RUN pip install scipy
 RUN pip install pandas
 RUN pip install matplotlib
 
-# make directory to store tools such as QCParser
-RUN mkdir tools
-
 # get the QCParser from GitHub
-RUN git clone https://github.com/alexwaldrop/QCParser.git /tools/QCParser
+RUN git clone https://github.com/alexwaldrop/QCParser.git /opt/QCParser
 
-ENV PATH /tools/QCParser:$PATH
+ENV PATH /opt/QCParser:$PATH
 
 CMD ["python", "QCParser.py"]
