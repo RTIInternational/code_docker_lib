@@ -29,6 +29,10 @@ parser = add_option(object=parser, opt_str=c("--bold_p"), default="yes", type="c
                     help=" Bold all of the phenotypes that have a significant P-value (bonferroni corrected).")
 parser = add_option(object=parser, opt_str=c("--title"), default="", type="character",
 		    help="Title of the plot. Make sure to wrap in quotes.")
+parser = add_option(object=parser, opt_str=c("--xmin"), default=-10.001, type="double",
+		    help="xminimum during the plot.")
+parser = add_option(object=parser, opt_str=c("--xmax"), default=10.001, type="double",
+		    help="xmaximum during the plot.")
 ############## Parse command line
 argv = parse_args(parser)
 
@@ -76,6 +80,8 @@ group_label_colname = argv$group_colname
 pvalue_colname = argv$pvalue_colname
 pvalue_threshold = argv$pvalue_threshold
 plot_title = argv$title
+xmin = argv$xmin
+xmax = argv$xmax
 
 
 # Read data from CSV
@@ -126,6 +132,15 @@ data = data[!is.na(data$rg),]
 data$xmin = data$rg - data$se * 1.96
 data$xmax = data$rg + data$se * 1.96
 
+if (xmax==10.001){
+    xmax = data$xmax
+}
+if (xmin==-10.001){
+    xmin = data$xmin
+}
+
+# clip data if necessary
+
 # Sort by correlation coefficient
 data = data[order(data$group, data$rg), ]
 
@@ -159,10 +174,11 @@ my_plot <- ggplot(data, aes(x = rg, y = trait, color=group)) +
   geom_errorbarh(aes(xmin = xmin, xmax = xmax), size = .5, height = .2) +
   geom_point(size = 3.5) + theme_bw() +
   ylab("") + theme(legend.title=element_blank(), plot.title = element_text(hjust = 0.5)) +
-  guides(color = guide_legend(reverse=T)) + ggtitle(plot_title)
+  guides(color = guide_legend(reverse=T)) + ggtitle(plot_title) + coord_cartesian(xlim = c(xmin,xmax), clip = "on")
 
 my_plot + theme(
     axis.text.y = element_text(face=bold_vector)
 )
 
 dev.off()
+
