@@ -93,8 +93,12 @@ RUN wget ftp://ftp.ccb.jhu.edu/pub/infphilo/hisat2/downloads/hisat2-2.1.0-source
     && mv hisat2-2.1.0 /opt/ \
     && cd /opt/hisat2-2.1.0/ \
     && make USE_SRA=1 NCBI_NGS_DIR=/usr/local/ngs/ngs-sdk NCBI_VDB_DIR=/usr/local/ncbi/ncbi-vdb \
-    && cp hisat2-* *.py /opt/
-
+    && cp hisat2-* *.py /opt/ \
+    && cp hisat2 /opt/ \
+    && cp scripts/* /opt/ \
+    && cp hisatgenotype_modules/* /opt/ \
+    && cp hisatgenotype_scripts/* /opt/ 
+    
 WORKDIR /
 
 # Add /opt to executables path list
