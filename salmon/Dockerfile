@@ -86,7 +86,7 @@ RUN apt-get update \
     && make \
     && make install \
     && ln -s /usr/bin/salmon /opt/salmon \
-    && rm -rf salmon-v${SALMON_VERSION}.tar.gz salmon-${SALMON_VERSION}
+    && rm -rf /salmon-v${SALMON_VERSION}.tar.gz /salmon-${SALMON_VERSION}
     
 WORKDIR /
 
