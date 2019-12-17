@@ -41,11 +41,33 @@ RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
+# Add R repo to get more R versions
+# Install littler, and create a link for littler in /usr/local/bin
+# Set a default CRAN repo, and make sure littler knows about it
+# Install stringr to make dococt install (from source) easier
+ENV R_BASE_VERSION 3.6.1-3bionic
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libcurl4-openssl-dev \
+        libssl-dev \
+        gpg-agent
+        
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends --no-upgrade r-base-core=${R_BASE_VERSION}
+RUN apt-get install -y --no-install-recommends --no-upgrade r-recommended=${R_BASE_VERSION} \
+    r-base=${R_BASE_VERSION} \
+    r-base-dev=${R_BASE_VERSION} \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
+    && rm -rf /var/lib/apt/lists/*
+
 #### Install dependencies ####
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         gcc \
-        libcurl4-openssl-dev \
         python3-pycurl \
         python3-dev \
         python3-pip \
