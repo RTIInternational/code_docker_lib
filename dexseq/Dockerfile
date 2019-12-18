@@ -84,12 +84,14 @@ RUN apt-get update \
     && pip install setuptools \
     && pip install wheel \
     && pip install pysam \
+    && pip install HTSeq \
     && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/*
 
 #### Install DEXSeq ####    
 #Install packages from CRAN and bioconductor:
-RUN Rscript -e 'install.packages(c("BiocManager"));'
+RUN Rscript -e 'install.packages(c("BiocManager"));' \
+    && Rscript -e 'BiocManager::install(version = "3.9", ask = F);'
 RUN Rscript -e 'BiocManager::install(c("DEXSeq", "tximport"), version = "3.9");'
 RUN ln -s /usr/local/lib/R/site-library/DEXSeq/python_scripts/dexseq_count.py /opt/dexseq_count.py \
     && ln -s /usr/local/lib/R/site-library/DEXSeq/python_scripts/dexseq_prepare_annotation.py /opt/dexseq_prepare_annotation.py
