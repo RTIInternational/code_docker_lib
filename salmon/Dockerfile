@@ -73,7 +73,7 @@ RUN apt remove --purge --auto-remove cmake \
     && rm -rf ~/temp
 
 #### Install Salmon ####
-ENV SALMON_VERSION 1.0.0
+ENV SALMON_VERSION 1.1.0
 ENV CMAKE_REQUIRED_INCLUDES /usr/include
 
 RUN apt-get update \
