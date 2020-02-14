@@ -82,7 +82,7 @@ WORKDIR /
 
 #Install packages from CRAN and bioconductor:
 RUN Rscript -e 'install.packages(c("BiocManager"));'
-RUN Rscript -e 'BiocManager::install(c("DESeq2", "tximport", "apeglm", "GenomicFeatures"), version = "3.9");'
+RUN Rscript -e 'BiocManager::install(c("DESeq2", "tximeta", "tximport", "apeglm", "GenomicFeatures", "IHW"), version = "3.10");'
 
 
 ENV PATH=pkg-config:$PATH
