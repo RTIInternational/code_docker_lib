@@ -1,4 +1,4 @@
-#!/share/apps/R/bin/Rscript
+#!/usr/bin/Rscript
 library("optparse")
 
 option_list = list(
