@@ -22,7 +22,7 @@ argv = parse_args(parser)
 # parse cmdline params
 salmon_dir = argv$salmon_dir
 output_basename = argv$output_basename
-tx.gtf <- argv$gft
+tx.gtf <- argv$gtf
 
 # Options
 options(stringsAsFactors = F)
