@@ -177,8 +177,7 @@ my_plot <- ggplot(data, aes(x = rg, y = trait, color=group)) +
   guides(color = guide_legend(reverse=T)) + ggtitle(plot_title) + coord_cartesian(xlim = c(xmin,xmax), clip = "on")
 
 my_plot + theme(
-    axis.text.y = element_text(face=bold_vector)
-)
-
+    axis.text.y = element_text(face=bold_vector))
+my_plot + geom_vline(xintercept = 1)
 dev.off()
 
