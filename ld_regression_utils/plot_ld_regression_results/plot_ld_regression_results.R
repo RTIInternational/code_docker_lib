@@ -33,6 +33,9 @@ parser = add_option(object=parser, opt_str=c("--xmin"), default=-10.001, type="d
 		    help="xminimum during the plot.")
 parser = add_option(object=parser, opt_str=c("--xmax"), default=10.001, type="double",
 		    help="xmaximum during the plot.")
+parser = add_option(object=parser, opt_str=c("--vertical_rg"), default=10000, type="double",
+        help="Plot a vertical line at any value of rg (e.g. at rg=1 )")
+
 ############## Parse command line
 argv = parse_args(parser)
 
@@ -82,6 +85,7 @@ pvalue_threshold = argv$pvalue_threshold
 plot_title = argv$title
 xmin = argv$xmin
 xmax = argv$xmax
+vline = argv$vertical_rg
 
 
 # Read data from CSV
@@ -174,10 +178,10 @@ my_plot <- ggplot(data, aes(x = rg, y = trait, color=group)) +
   geom_errorbarh(aes(xmin = xmin, xmax = xmax), size = .5, height = .2) +
   geom_point(size = 3.5) + theme_bw() +
   ylab("") + theme(legend.title=element_blank(), plot.title = element_text(hjust = 0.5)) +
-  guides(color = guide_legend(reverse=T)) + ggtitle(plot_title) + coord_cartesian(xlim = c(xmin,xmax), clip = "on")
+  guides(color = guide_legend(reverse=T)) + ggtitle(plot_title) + coord_cartesian(xlim = c(xmin,xmax), clip = "on") + geom_vline(xintercept = vline)
+
 
 my_plot + theme(
     axis.text.y = element_text(face=bold_vector))
-my_plot + geom_vline(xintercept = 1)
 dev.off()
 
