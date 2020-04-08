@@ -87,7 +87,7 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
 WORKDIR /
 
 #Install packages from CRAN and bioconductor:
-RUN wget https://cran.r-project.org/src/contrib/MatrixEQTL_2.2.tar.gz \
+RUN wget https://cran.r-project.org/src/contrib/Archive/MatrixEQTL/MatrixEQTL_2.2.tar.gz \
     && wget https://cran.r-project.org/src/contrib/Archive/optparse/optparse_1.6.1.tar.gz \
     && wget https://cran.r-project.org/src/contrib/Archive/getopt/getopt_1.20.2.tar.gz \
     && Rscript -e 'install.packages("MatrixEQTL_2.2.tar.gz", repos = NULL);' \
