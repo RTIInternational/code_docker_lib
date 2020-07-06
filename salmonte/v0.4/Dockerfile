@@ -65,7 +65,6 @@ ENV LANG en_US.UTF-8
 # Add R repo to get R 3.6.1
 # Install littler, and create a link for littler in /usr/local/bin
 # Set a default CRAN repo, and make sure littler knows about it
-# Install stringr to make dococt install (from source) easier
 ENV R_BASE_VERSION 3.6.1-3bionic
 
 
