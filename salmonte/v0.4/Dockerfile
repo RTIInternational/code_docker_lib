@@ -21,16 +21,8 @@ RUN useradd docker \
     && addgroup docker staff
 
 # Don't print "debconf: unable to initialize frontend: Dialog" messages
-ARG DEBIAN_FRONTEND noninteractive 
+ARG DEBIAN_FRONTEND=noninteractive 
 
-
-# Configure default locale
-RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
-    && locale-gen en_US.utf8 \
-    && /usr/sbin/update-locale LANG=en_US.UTF-8
-
-ENV LC_ALL en_US.UTF-8
-ENV LANG en_US.UTF-8
 
 ##################### Install System Dependencies ##############################
 RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/apt/sources.list \
@@ -52,6 +44,14 @@ RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/
 	libffi-dev \
 	&& rm -rf /var/lib/apt/lists/*
 
+
+# Configure default locale
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen en_US.utf8 \
+    && /usr/sbin/update-locale LANG=en_US.UTF-8
+
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
 
 ##################### Install R ##############################
 
