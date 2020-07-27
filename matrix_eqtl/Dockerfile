@@ -1,6 +1,6 @@
 
 # Base image
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Maintainer and author
 LABEL maintainer="Bryan Quach <bquach@rti.org>"
@@ -15,7 +15,7 @@ RUN useradd docker \
     && chown docker:docker /home/docker \
     && addgroup docker staff
 
-RUN echo 'deb http://mirror.math.princeton.edu/pub/ubuntu/ bionic main' >> /etc/apt/sources.list \
+RUN echo 'deb http://mirror.umd.edu/ubuntu/ focal main' >> /etc/apt/sources.list \
     && apt-get update \ 
     && apt-get install -y --no-install-recommends \
         dirmngr \
@@ -40,16 +40,15 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
 # Install OpenBLAS for optimized R linear algebra computations
-# Add R repo to get R 3.5.1
 # Install littler, and create a link for littler in /usr/local/bin
 # Set a default CRAN repo, and make sure littler knows about it
 # Install stringr to make dococt install (from source) easier
-ENV R_BASE_VERSION 3.5.1-2bionic
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
-    && apt-get update \
+RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        libgfortran-9-dev-amd64-cross \
+        libgfortran-9-dev-arm64-cross \
         cpp \
         libgirepository-1.0-1 \
         libglib2.0-0 \
@@ -57,28 +56,24 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
         libssl-dev \
         libcurl4-openssl-dev \
         libxml2-dev \
-        libmpx0 \
+        libmpx2 \
         curl \
         perl-base \
         gpg-agent \
         libxrender1 \
-    && apt-get install -y --no-install-recommends libopenblas-base \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' \
+    && apt-get install -y --no-install-recommends libopenblas-base
+
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' \
     && apt-get update \
-    && apt-get install -y --no-install-recommends \
-        r-base=${R_BASE_VERSION} \
-        r-base-dev=${R_BASE_VERSION} \
-        r-recommended=${R_BASE_VERSION} \
-        r-cran-littler \
-        r-cran-stringr \
-        && echo 'options(repos = c(CRAN = "https://cloud.r-project.org/"))' >> /etc/R/Rprofile.site \
-        && echo 'source("/etc/R/Rprofile.site")' >> /etc/littler.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/testInstalled.r /usr/local/bin/testInstalled.r \
-    && install.r docopt \
+    && apt-get install -y --no-install-recommends r-base-core \
+        r-recommended \
+        r-base \
+        r-base-dev \
+        r-recommended \
+    && Rscript -e 'install.packages(c("littler", "stringr", "docopt"));' \
+    && echo 'options(repos = c(CRAN = "https://cloud.r-project.org/"))' >> /etc/R/Rprofile.site \
+    && echo 'source("/etc/R/Rprofile.site")' >> /etc/littler.r \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
@@ -99,4 +94,4 @@ COPY run_matrix_eqtl.R /opt/
 
 ENV PATH=pkg-config:$PATH
 
-CMD ["Rscript /opt/run_matrix_eqtl.R --help"]
+CMD ["Rscript", "/opt/run_matrix_eqtl.R", "--help"]
