@@ -56,17 +56,17 @@ RUN apt-get update \
 WORKDIR /
 
 #### Install bicmix ####
-RUN wget https://www.cs.princeton.edu/~bee/software/BicMix-Code-for-distribution.zip \
-    && unzip BicMix-Code-for-distribution.zip \
-    && rm BicMix-Code-for-distribution.zip \
-    && mv BicMix-Code-for-distribution /opt/ \
-    && cd /opt/BicMix-Code-for-distribution/ \
+RUN wget https://github.com/bryancquach/BicMix/archive/v1.0.0.zip \
+    && unzip v1.0.0.zip \
+    && rm v1.0.0.zip \
+    && mv BicMix-1.0.0 /opt/ \
+    && cd /opt/BicMix-1.0.0/ \
     && perl -i -pe 's/Your_library/usr\/include/g' Makefile \
     && mv /usr/include/eigen3/Eigen/ /usr/include/ \
     && make \
-    && mv /opt/BicMix-Code-for-distribution/BicMix /opt/ \
+    && mv /opt/BicMix-1.0.0/BicMix /opt/ \
     && cd / \
-    && rm -rf /opt/BicMix-Code-for-distribution
+    && rm -rf /opt/BicMix-1.0.0
     
 WORKDIR /
 
