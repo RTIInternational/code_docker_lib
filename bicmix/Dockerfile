@@ -42,7 +42,6 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
 #### Install dependencies ####
-
 RUN apt-get update \ 
     && apt-get install -y --no-install-recommends \
         unzip \
@@ -51,9 +50,38 @@ RUN apt-get update \
         gsl-bin \
         libgsl-dev \
         libboost-dev \
-        libeigen3-dev
+        libeigen3-dev \
+        libopenblas-base \
+        liblapack64-dev \
+        gpg-agent \
+    && rm -rf /var/lib/apt/lists/*
+
+
+# Add R repo to get more R versions
+# Install littler, and create a link for littler in /usr/local/bin
+# Set a default CRAN repo, and make sure littler knows about it
+# Install stringr to make dococt install (from source) easier
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' \
+    && apt-get clean \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libxcb-shm0 \
+    && apt-get install -y --no-install-recommends \
+        r-base-core
+RUN apt-get install -y --no-install-recommends r-recommended \
+    r-base \
+    r-base-dev \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
+    && rm -rf /var/lib/apt/lists/*
+
+#Install packages from CRAN and bioconductor:
+RUN Rscript -e 'install.packages(c("BiocManager", "Matrix", "GeneNet", "argparser"));' \
+    && Rscript -e 'BiocManager::install(version = "3.11", ask = F);'
+RUN Rscript -e 'BiocManager::install(c("reshape2", "ggplot2"), version = "3.11");'
 
 WORKDIR /
+
 
 #### Install bicmix ####
 RUN wget https://github.com/bryancquach/BicMix/archive/v1.0.0.zip \
@@ -67,6 +95,12 @@ RUN wget https://github.com/bryancquach/BicMix/archive/v1.0.0.zip \
     && mv /opt/BicMix-1.0.0/BicMix /opt/ \
     && cd / \
     && rm -rf /opt/BicMix-1.0.0
+
+#### Add network building script ####
+RUN wget https://github.com/bryancquach/twn_tsn/archive/master.zip \
+    && unzip /master.zip \
+    && mv /twn_tsn-master/tsn/recover_TSN.R /opt \
+    && rm -rf /master.zip /twn_tsn-master
     
 WORKDIR /
 
@@ -74,4 +108,4 @@ WORKDIR /
 ENV PATH=pkg-config:$PATH:/opt/
 
 # Default command 
-CMD ["/opt/BicMix"]
+CMD ["ls", "-1", "/opt/"]
