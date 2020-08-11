@@ -131,10 +131,10 @@ if(!is.null(argv$cov_file)){
     cat("Done.\n")
     cat(paste0("Loaded ", n.vars, " covariates.\n"))
     # Subset and match rows between covariate and omic data matrix
-    cov.subset <- cov.data[rownames(cov.data) %in% rownames(omic.data), drop = F]
-    omic.subset <- omic.data[rownames(omic.data) %in% rownames(cov.subset), drop = F]
+    cov.subset <- cov.data[rownames(cov.data) %in% rownames(omic.data), , drop = F]
+    omic.subset <- omic.data[rownames(omic.data) %in% rownames(cov.subset), , drop = F]
     match.order <- match(rownames(cov.subset), table = rownames(omic.subset))
-    cov.subset <- cov.subset[match.order, drop = F]
+    cov.subset <- cov.subset[match.order, , drop = F]
     if(nrow(omic.subset) < nrow(omic.data)){
         cat(paste0("Data reduced to ", nrow(omic.subset), 
         " samples after matching with covariate data.\n"))
