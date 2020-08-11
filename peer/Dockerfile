@@ -45,8 +45,9 @@ ENV LANG en_US.UTF-8
 ENV R_BASE_VERSION 3.5.1-2bionic
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
-    && apt-get update \
+#RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
+#   && apt-get update \
+RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         cpp \
         libgirepository-1.0-1 \
@@ -60,23 +61,29 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
         perl-base \
         gpg-agent \
         libxrender1 \
-    && apt-get install -y --no-install-recommends libopenblas-base \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && apt-get install -y --no-install-recommends libopenblas-base
+
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' \
+    && cp /etc/apt/sources.list /etc/apt/sources.list~ \
+    && sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list \
     && apt-get update \
-    && apt-get install -y --no-install-recommends \
-        r-base=${R_BASE_VERSION} \
-        r-base-dev=${R_BASE_VERSION} \
-        r-recommended=${R_BASE_VERSION} \
-        r-cran-littler \
-        r-cran-stringr \
-        && echo 'options(repos = c(CRAN = "https://cloud.r-project.org/"))' >> /etc/R/Rprofile.site \
-        && echo 'source("/etc/R/Rprofile.site")' >> /etc/littler.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
-    && ln -s /usr/lib/R/site-library/littler/examples/testInstalled.r /usr/local/bin/testInstalled.r \
-    && install.r docopt \
+    && apt-get build-dep -y r-base  \
+    && wget https://cran.r-project.org/src/base/R-3/R-3.5.1.tar.gz \
+    && tar -xzf R-3.5.1.tar.gz \
+    && rm R-3.5.1.tar.gz \
+    && cd R-3.5.1/ \
+    && ./configure --prefix=/usr/lib/R/ --with-blas --with-lapack \
+    && make \
+    && make install \
+    && ln -s /usr/lib/R/bin/R /bin/R \
+    && ln -s /usr/lib/R/bin/Rscript /bin/Rscript \
+    && cd .. \
+    && rm -rf R-3.5.1
+
+WORKDIR /
+
+RUN Rscript -e 'install.packages(c("littler", "stringr"), repos = "http://cran.us.r-project.org")' \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
@@ -85,10 +92,15 @@ RUN add-apt-repository -y ppa:marutter/c2d4u3.5 \
 # Install dependencies and Python PEER package
 RUN apt-get update \
     && apt-get install -y \
+        libmpx0 \
+        libgcc-6-dev \
+        libstdc++-6-dev \
         gcc-5 \
         g++-5 \
         cmake \
         swig \
+        python3-lib2to3 \
+        python3-distutils \
         python \
         python-dev \
         python-numpy \
@@ -97,9 +109,11 @@ RUN apt-get update \
     && wget https://github.com/downloads/PMBio/peer/peer_source_1.3.tar.gz \
     && tar -xvf peer_source_1.3.tar.gz \
     && cd /peer/build/ \
+#    && find /peer -exec touch \{\} \;
     && cmake /peer \
     && make \
     && make install \
+    && cd / \
     && rm -rf /peer /peer_source_1.3.tar.gz
 
 # Install dependencies and R PEER package
@@ -117,6 +131,4 @@ ENV PATH=pkg-config:$PATH
 
 WORKDIR /
 
-ENTRYPOINT ["Rscript", "/opt/run_peer.R"]
-
-CMD ["--help"]
+CMD ["Rscript", "/opt/run_peer.R", "--help"]
