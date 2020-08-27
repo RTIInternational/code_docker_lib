@@ -96,7 +96,7 @@ RUN apt-get install -y --no-install-recommends r-recommended \
 #Install packages from CRAN and bioconductor:
 RUN Rscript -e 'install.packages(c("BiocManager", "gplots", "knitr"));' \
     && Rscript -e 'BiocManager::install(version = "3.11", ask = F);'
-RUN Rscript -e 'BiocManager::install(c("qplots", "pheatmap", "glmnet", "rsvd", "qvalue"), version = "3.11");'
+RUN Rscript -e 'BiocManager::install(c("qplots", "pheatmap", "glmnet", "rsvd", "qvalue", "biomaRt"), version = "3.11");'
 
 WORKDIR /
 
