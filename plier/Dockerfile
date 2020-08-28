@@ -103,7 +103,6 @@ WORKDIR /
 
 #### Install plier ####
 RUN wget https://github.com/wgmao/PLIER/archive/v0.1.4.tar.gz \
-    && tar -xf v0.1.4.tar.gz \
     && R CMD INSTALL v0.1.4.tar.gz \
     && rm v0.1.4.tar.gz
     
