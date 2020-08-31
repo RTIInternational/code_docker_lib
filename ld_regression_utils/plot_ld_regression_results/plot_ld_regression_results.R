@@ -140,11 +140,13 @@ data = data[!is.na(data$rg),]
 data$xmin = data$rg - data$se * 1.96
 data$xmax = data$rg + data$se * 1.96
 
+
+# If the user
 if (xmax==10.001){
-    xmax = data$xmax
+    xmax = max(data$xmax)
 }
 if (xmin==-10.001){
-    xmin = data$xmin
+    xmin = min(data$xmin)
 }
 
 # clip data if necessary
@@ -159,7 +161,6 @@ if (argv$bold_p == "yes") {
 	pvalue_bold <- 0   # don't bold any phenotype
 }
 
-#print(pvalue_bold)
 
 
 # Subset by pvalue
@@ -181,9 +182,9 @@ my_plot <- ggplot(data, aes(x = rg, y = trait, color=group)) +
   geom_vline(aes(xintercept = 0), size = 0.25, linetype = "dashed") +
   geom_errorbarh(aes(xmin = xmin, xmax = xmax), size = .5, height = .2) +
   geom_point(size = 3.5) + theme_bw() +
-  ylab("") + theme(legend.title=element_blank(), plot.title = element_text(hjust = 0.5)) +
-  guides(color = guide_legend(reverse=T)) + ggtitle(plot_title) + coord_cartesian(xlim = c(xmin,xmax), clip = "on") + geom_vline(xintercept = vline)
-
+  ylab("") + theme(legend.title=element_blank(), 
+  plot.title = element_text(hjust = 0.5)) +
+  guides(color = guide_legend(reverse=T)) + ggtitle(plot_title) + geom_vline(xintercept = vline) + coord_cartesian(xlim = c(xmin,xmax), clip = "on") 
 
 
 if (colorblind){
@@ -191,8 +192,7 @@ if (colorblind){
         axis.text.y = element_text(face=bold_vector)) + scale_colour_viridis_d()
 } else {
     my_plot + theme(
-        axis.text.y = element_text(face=bold_vector))
+        axis.text.y = element_text(face=bold_vector)) 
 }
 
 dev.off()
-
