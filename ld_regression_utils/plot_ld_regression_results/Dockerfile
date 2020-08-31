@@ -3,7 +3,7 @@ FROM r-base:3.5.3
 LABEL maintainer=awaldrop@rti.org
 
 # Install R packages
-RUN R -e 'install.packages(c("ggplot2", "optparse"), repos="http://cran.us.r-project.org")'
+RUN R -e 'install.packages(c("ggplot2", "optparse", "viridis"), repos="http://cran.us.r-project.org")'
 
 # =====================================================================
 # Standard docker image stuff
