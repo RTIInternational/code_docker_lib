@@ -1,6 +1,7 @@
 FROM r-base:3.5.3
 
 LABEL maintainer=awaldrop@rti.org
+LABEL author=jmarks@rti.org
 
 # Install R packages
 RUN R -e 'install.packages(c("ggplot2", "optparse", "viridis"), repos="http://cran.us.r-project.org")'
@@ -20,4 +21,3 @@ RUN chmod -R u+x /opt/plot_ld_regression
 # Set wrkdir
 RUN mkdir -p /data
 WORKDIR /data
-
