@@ -1,5 +1,7 @@
 library(ggplot2)
 library(optparse)
+library(viridis)
+
 
 ############## Create CL parser
 parser = OptionParser(usage = "\n%prog [options] --input_file <input_file> --rg_colname <rg_colname> --se_colname <se_colname> --label_colname <label_colname> --group_colname <group_colname> --output_file <output_file>", 
@@ -34,8 +36,9 @@ parser = add_option(object=parser, opt_str=c("--xmin"), default=-10.001, type="d
 parser = add_option(object=parser, opt_str=c("--xmax"), default=10.001, type="double",
 		    help="xmaximum during the plot.")
 parser = add_option(object=parser, opt_str=c("--vertical_rg"), default=10000, type="double",
-        help="Plot a vertical line at any value of rg (e.g. at rg=1 )")
-
+		    help="Plot a vertical line at any value of rg (e.g. at rg=1 )")
+parser = add_option(object=parser, opt_str=c("--colorblind"), default=FALSE, type="logical", action="store_true",dest="colorblind",
+		    help="Use colorblind-conscience colors for the plot.")
 ############## Parse command line
 argv = parse_args(parser)
 
@@ -86,6 +89,7 @@ plot_title = argv$title
 xmin = argv$xmin
 xmax = argv$xmax
 vline = argv$vertical_rg
+colorblind = argv$colorblind
 
 
 # Read data from CSV
@@ -181,7 +185,14 @@ my_plot <- ggplot(data, aes(x = rg, y = trait, color=group)) +
   guides(color = guide_legend(reverse=T)) + ggtitle(plot_title) + coord_cartesian(xlim = c(xmin,xmax), clip = "on") + geom_vline(xintercept = vline)
 
 
-my_plot + theme(
-    axis.text.y = element_text(face=bold_vector))
+
+if (colorblind){
+    my_plot + theme(
+        axis.text.y = element_text(face=bold_vector)) + scale_colour_viridis_d()
+} else {
+    my_plot + theme(
+        axis.text.y = element_text(face=bold_vector))
+}
+
 dev.off()
 
