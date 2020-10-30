@@ -67,7 +67,7 @@ RUN mkdir /data/
 
 WORKDIR /data/
 
-ENV PATH="/opt/metal:${PATH}"
+ENV PATH="/opt/:${PATH}"
 
 # default help command
 CMD  ["/opt/metal", "/opt/help.txt"]
